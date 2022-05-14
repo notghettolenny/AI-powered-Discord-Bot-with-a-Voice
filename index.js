@@ -77,3 +77,52 @@ async function sendAndPlayMessage(message) {
                 console.log('audio.wav is now playing!'); // Checking the file is played
                 message.reply(text); // While the audio is playing, we can send the message into the chat
               })
+ .on('finish', () => {
+                console.log('audio.wav has finished playing!'); // Checking the file is done playing
+                fs.unlinkSync('audio.wav'); // Delete the file
+                connection.disconnect();
+              })
+              .on('error', e => {
+                message.channel.send("Sorry, I'm unable to speak right now."); // The file cannot be played
+                console.error(e);
+                fs.unlinkSync('audio.wav'); // Delete the file
+                return connection.disconnect();;
+              });
+            });
+          });
+        })
+        .catch(err => {
+          console.log('error:', err);
+        });
+      } else {
+        // This is if the message sender is not in a voice channel, we just send a reply in the message channel
+        message.reply(text);
+      }
+
+      return JSON.stringify(response.result.output.generic[0].text, null, 2);
+    })
+    .catch(err => {
+      // In case of an error, tell us what it is in the terminal
+      console.log(err);
+      return error.stringify;
+    });
+  } catch (error) {
+    // In case of an error, tell us what it is in the terminal
+    console.error(error);
+  }  
+}
+
+client.once('ready', () => {
+  console.log('Ready!');
+});
+
+client.login(process.env.DISCORD_TOKEN);
+
+const prefix = "*"
+
+client.on('message', message => {
+  // If the message doesn't start with the prefix or the message is coming from another bot, we're not going to do anything
+  if (!message.content.startsWith(prefix) || message.author.bot) return;
+  // Otherwise, we'll send that message to our assistant
+  sendAndPlayMessage(message);
+});
